@@ -1,2 +1,41 @@
 DEFCONFIG=gki_defconfig
-POST_DEFCONFIG_CMDS="check_defconfig"
+POST_DEFCONFIG_CMDS="update_config"
+
+POST_DEFCONFIG_CMDS="update_config"
+
+function update_config() {
+    ${KERNEL_DIR}/scripts/config --file ${OUT_DIR}/.config \
+         -e CONFIG_CGROUP_DEVICE \
+         -e CONFIG_IPC_NS \
+         -e CONFIG_PID_NS \
+         -e CONFIG_POSIX_MQUEUE \
+         -e CONFIG_SYSVIPC \
+         -e CONFIG_USER_NS \
+         -e CONFIG_BRIDGE_VLAN_FILTERING \
+         -e CONFIG_IP6_NF_NAT \
+         -e CONFIG_IP6_NF_TARGET_MASQUERADE \
+         -e CONFIG_IPVLAN \
+         -e CONFIG_MACVLAN \
+         -e CONFIG_NETFILTER_XT_MATCH_ADDRTYPE \
+         -e CONFIG_NF_CONNTRACK \
+         -e CONFIG_NF_TABLES \
+         -e CONFIG_NF_TABLES_INET \
+         -e CONFIG_NF_TABLES_IPV4 \
+         -e CONFIG_NF_TABLES_IPV6 \
+         -e CONFIG_NFT_COMPAT \
+         -e CONFIG_NFT_CT \
+         -e CONFIG_NFT_FIB_IPV4 \
+         -e CONFIG_NFT_FIB_IPV6 \
+         -e CONFIG_NFT_MASQ \
+         -e CONFIG_NFT_NAT \
+         -e CONFIG_NFT_REDIR \
+         -e CONFIG_NFT_REJECT \
+         -e CONFIG_VXLAN \
+         -e CONFIG_BTRFS_FS \
+         -e CONFIG_BTRFS_FS_POSIX_ACL \
+         -e CONFIG_NTFS3_FS \
+         -e CONFIG_NTFS3_FS_POSIX_ACL \
+         -e CONFIG_TMPFS_XATTR
+    (cd ${OUT_DIR} && \
+     make ${TOOL_ARGS} O=${OUT_DIR} olddefconfig)
+}
