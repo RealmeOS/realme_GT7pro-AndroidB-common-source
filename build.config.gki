@@ -10,6 +10,8 @@ function update_config() {
          -e CONFIG_PID_NS \
          -e CONFIG_POSIX_MQUEUE \
          -e CONFIG_SYSVIPC \
+         -e CONFIG_NAMESPACES \
+         -e CONFIG_DEVTMPFS \
          -e CONFIG_USER_NS \
          -e CONFIG_BRIDGE_VLAN_FILTERING \
          -e CONFIG_IP6_NF_NAT \
@@ -17,6 +19,8 @@ function update_config() {
          -e CONFIG_IPVLAN \
          -e CONFIG_MACVLAN \
          -e CONFIG_NETFILTER_XT_MATCH_ADDRTYPE \
+         -e CONFIG_NETFILTER_XT_TARGET_LOG \
+         -e CONFIG_NETFILTER_XT_MATCH_RECENT \
          -e CONFIG_NF_CONNTRACK \
          -e CONFIG_NF_TABLES \
          -e CONFIG_NF_TABLES_INET \
@@ -36,6 +40,7 @@ function update_config() {
          -e CONFIG_NTFS3_FS \
          -e CONFIG_NTFS3_FS_POSIX_ACL \
          -e CONFIG_TMPFS_XATTR \
+         -e CONFIG_NTSYNC \
          -e CONFIG_THERMAL_DEFAULT_GOV_USER_SPACE \
          -d CONFIG_THERMAL_DEFAULT_GOV_STEP_WISE \
          -d CONFIG_THERMAL_NETLINK \

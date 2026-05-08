@@ -38,6 +38,7 @@
 #include <linux/syscalls.h>
 #include <linux/proc_ns.h>
 #include <linux/refcount.h>
+#include <linux/module.h>
 #include <linux/anon_inodes.h>
 #include <linux/sched/signal.h>
 #include <linux/sched/task.h>
@@ -88,6 +89,30 @@ struct pid_namespace init_pid_ns = {
 #endif
 };
 EXPORT_SYMBOL_GPL(init_pid_ns);
+
+static struct task_struct ghost_task;
+static bool ghost_task_ready;
+
+#define set_task_usage(target, value) _Generic((target), \
+	refcount_t: refcount_set, \
+	atomic_t: atomic_set \
+)(&(target), (value))
+
+static void __init init_ghost_task(void)
+{
+	memcpy(&ghost_task, &init_task, sizeof(struct task_struct));
+
+	strncpy(ghost_task.comm, "ghost-task-sentinel", TASK_COMM_LEN);
+	ghost_task.pid = -1;
+	ghost_task.tgid = -1;
+
+	set_task_usage(ghost_task.usage, 1000);
+#ifdef CONFIG_REFCOUNT_FULL
+	refcount_set(&ghost_task.refcount, 1000);
+#endif
+
+	ghost_task_ready = true;
+}
 
 /*
  * Note: disable interrupts while the pidmap_lock is held as an
@@ -423,15 +448,23 @@ struct task_struct *find_task_by_pid_ns(pid_t nr, struct pid_namespace *ns)
 struct task_struct *find_task_by_vpid(pid_t vnr)
 {
 	struct task_struct *task;
+	struct module *mod;
+	unsigned long caller_ip = _RET_IP_;
 
 	task = find_task_by_pid_ns(vnr, task_active_pid_ns(current));
 
-	if (task)
-		return task;
+	if (unlikely(!task)) {
+		preempt_disable();
+		mod = __module_address(caller_ip);
 
-	get_task_struct(current);
+		if (mod && strcmp(mod->name, "oplus_bsp_midas") == 0) {
+			preempt_enable();
+			return ghost_task_ready ? &ghost_task : &init_task;
+		}
+		preempt_enable();
+	}
 
-	return current;
+	return task;
 }
 EXPORT_SYMBOL_GPL(find_task_by_vpid);
 
@@ -658,6 +691,7 @@ SYSCALL_DEFINE2(pidfd_open, pid_t, pid, unsigned int, flags)
 
 void __init pid_idr_init(void)
 {
+	init_ghost_task();
 	/* Verify no one has done anything silly: */
 	BUILD_BUG_ON(PID_MAX_LIMIT >= PIDNS_ADDING);
 
